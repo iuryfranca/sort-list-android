@@ -1,67 +1,26 @@
-import { invoke } from '@tauri-apps/api/core'
-import { Button } from '@/components/ui/button'
-
+import { ThemeProvider } from '@/core/theme-provider'
 import './App.css'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
-import { useState } from 'react'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { DragSortList } from '@/components/DragSortList'
 
 function App() {
-  const [rows, setRows] = useState<any[]>([])
-
-  const newRow = () => {
-    setRows([
-      ...rows,
-      { id: Math.random(), description: '', price: 0, checked: false },
-    ])
-  }
-
   return (
-    <div className='flex flex-col items-center justify-start h-screen p-4 gap-4'>
-      {rows.map((row, index) => (
-        <div key={row.id} className='flex items-center space-x-2 w-full'>
-          <Checkbox
-            id='terms'
-            checked={row.checked}
-            onCheckedChange={() =>
-              setRows((rows) =>
-                rows.map((row, i) =>
-                  i === index ? { ...row, checked: !row.checked } : row
-                )
-              )
-            }
-          />
-          <Input
-            type='number'
-            placeholder='R$ 100,00'
-            value={row.price}
-            onChange={(e) =>
-              setRows((rows) =>
-                rows.map((row, i) =>
-                  i === index ? { ...row, price: e.target.value } : row
-                )
-              )
-            }
-          />
-          <Input
-            type='text'
-            placeholder='Escreva aqui...'
-            value={row.description}
-            onChange={(e) =>
-              setRows((rows) =>
-                rows.map((row, i) =>
-                  i === index ? { ...row, description: e.target.value } : row
-                )
-              )
-            }
-          />
-        </div>
-      ))}
+    <>
+      <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
+        <div className='min-h-screen flex flex-col'>
+          <header className='flex items-center justify-between py-4 px-8 text-white'>
+            <h1 className='text-primary scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-5xl'>
+              Drag and Drop Sort List
+            </h1>
+            <ThemeToggle />
+          </header>
 
-      <Button className='w-full' onClick={() => newRow()}>
-        Novo...
-      </Button>
-    </div>
+          <main className='mx-2 flex flex-col gap-6 h-full'>
+            <DragSortList />
+          </main>
+        </div>
+      </ThemeProvider>
+    </>
   )
 }
 
