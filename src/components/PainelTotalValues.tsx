@@ -21,7 +21,7 @@ export function PainelTotalValues() {
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Somar valores da lista</DrawerTitle>
+          <DrawerTitle>Soma dos valores na lista</DrawerTitle>
           <DrawerDescription className='mt-2'>
             Será somado o valor total de todos os campos numerais e a quantidade
             de items da colunas da lista.

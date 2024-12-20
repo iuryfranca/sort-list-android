@@ -1,11 +1,12 @@
 import { SortableContext, useSortable } from '@dnd-kit/sortable'
 import { type UniqueIdentifier } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { useMemo } from 'react'
+import { use, useEffect, useMemo, useState } from 'react'
 import { Task, TaskCard } from './TaskCard'
 import { cva } from 'class-variance-authority'
 import { Card, CardContent } from './ui/card'
 import { ScrollArea } from './ui/scroll-area'
+import { ListItem, useList } from '@/core/list-provider'
 
 export interface Column {
   id: UniqueIdentifier
@@ -60,6 +61,27 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
     }
   )
 
+  const { list, addItem, updateItem, removeItem } = useList()
+
+  const [item, setItem] = useState<ListItem>({
+    id: Math.random(),
+    checked: false,
+    value: 0,
+    description: '',
+  })
+
+  const handleEdit = () => {
+    updateItem(item.id, {
+      checked: item.checked,
+      value: item.value,
+      description: item.description,
+    })
+  }
+
+  useEffect(() => {
+    handleEdit()
+  }, [item])
+
   return (
     <Card
       ref={setNodeRef}
@@ -70,8 +92,8 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
       <ScrollArea className='p-1'>
         <CardContent className='flex flex-grow flex-col gap-2 p-1'>
           <SortableContext items={tasksIds}>
-            {tasks.map((task) => (
-              <TaskCard key={task.id} task={task} />
+            {tasks.map((task, index) => (
+              <TaskCard key={index} task={task} onSave={setItem} />
             ))}
           </SortableContext>
         </CardContent>

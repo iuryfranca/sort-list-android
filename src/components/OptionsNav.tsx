@@ -1,18 +1,21 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Combine, EllipsisVertical, Github, Linkedin } from 'lucide-react'
 
+import { open } from '@tauri-apps/plugin-shell'
+
 export function OptionsNav() {
+  const openExternelLink = (url: string) => {
+    open(url)
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -27,16 +30,22 @@ export function OptionsNav() {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem className='flex justify-between items-center'>
-            <a href='https://github.com/iuryfranca/sort-list-android'>
-              Sobre mim
-            </a>
+          <DropdownMenuItem
+            className='flex justify-between items-center'
+            onClick={() =>
+              openExternelLink(
+                'https://github.com/iuryfranca/sort-list-android'
+              )
+            }>
+            Sobre mim
             <Linkedin className='h-4 w-4 text-primary' />
           </DropdownMenuItem>
-          <DropdownMenuItem className='flex justify-between items-center'>
-            <a href='https://www.linkedin.com/in/iury-franca'>
-              Sobre o projeto
-            </a>
+          <DropdownMenuItem
+            className='flex justify-between items-center'
+            onClick={() =>
+              openExternelLink('https://www.linkedin.com/in/iury-franca')
+            }>
+            Sobre o projeto
             <Github className='h-4 w-4 text-primary' />
           </DropdownMenuItem>
         </DropdownMenuGroup>

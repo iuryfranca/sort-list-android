@@ -41,22 +41,22 @@ export type ColumnId = (typeof defaultCols)[number]['id']
 
 const initialTasks: Task[] = [
   {
-    id: 'task6',
+    id: 1,
     columnId: 'todo',
     content: 'Implement user authentication',
   },
   {
-    id: 'task7',
+    id: 2,
     columnId: 'todo',
     content: 'Build contact us page',
   },
   {
-    id: 'task8',
+    id: 3,
     columnId: 'todo',
     content: 'Create product catalog',
   },
   {
-    id: 'task9',
+    id: 4,
     columnId: 'todo',
     content: 'Develop about us page',
   },
@@ -274,7 +274,9 @@ export function DragSortList() {
                 )}
               />
             )}
-            {activeTask && <TaskCard task={activeTask} isOverlay />}
+            {activeTask && (
+              <TaskCard task={activeTask} isOverlay onSave={console.log} />
+            )}
           </DragOverlay>,
           document.body
         )}

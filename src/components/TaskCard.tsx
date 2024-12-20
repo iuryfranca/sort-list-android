@@ -4,11 +4,12 @@ import { CSS } from '@dnd-kit/utilities'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cva } from 'class-variance-authority'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, X } from 'lucide-react'
 import { ColumnId } from './DragSortList'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
+import { useEffect, useState } from 'react'
 
 export interface Task {
   id: UniqueIdentifier
@@ -19,6 +20,12 @@ export interface Task {
 interface TaskCardProps {
   task: Task
   isOverlay?: boolean
+  onSave: (item: {
+    id: number
+    checked: boolean
+    value: number
+    description: string
+  }) => void
 }
 
 export type TaskType = 'Task'
@@ -28,7 +35,9 @@ export interface TaskDragData {
   task: Task
 }
 
-export function TaskCard({ task, isOverlay }: TaskCardProps) {
+export function TaskCard({ task, isOverlay, onSave }: TaskCardProps) {
+  const id = task.id as number
+
   const {
     setNodeRef,
     attributes,
@@ -61,6 +70,27 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
     },
   })
 
+  const [value, setValue] = useState(0)
+  const [description, setDescription] = useState('')
+  const [checked, setIsChecked] = useState(false)
+
+  const handleClear = () => {
+    setValue(0)
+    setDescription('')
+    setIsChecked(false)
+  }
+
+  // Usar debounce para atrasar o envio
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      console.log('enviando', id, checked, value, description)
+      onSave({ id, checked, value, description })
+    }, 500)
+
+    // Limpa o timeout se o usuário continuar digitando
+    return () => clearTimeout(handler)
+  }, [checked, value, description, onSave])
+
   return (
     <Card
       ref={setNodeRef}
@@ -79,19 +109,23 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
         </Button>
         <Checkbox
           id='terms'
-          checked={true}
-          onCheckedChange={() => console.log('checked')}
+          checked={checked}
+          onCheckedChange={() => setIsChecked(!checked)}
         />
         <Input
           type='number'
           className='w-24'
           placeholder='R$ 10,00'
-          onChange={(e) => console.log(e.target.value)}
+          onChange={(e) => setValue(parseInt(e.target.value))}
         />
         <Textarea
           className='min-h-[auto] h-11 resize-none text-sm border-none leading-8 p-1'
           placeholder='Escreva aqui...'
-          onChange={(e) => console.log(e.target.value)}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <X
+          onClick={handleClear}
+          className='h-10 w-10 p-1 text-secondary-foreground/50 cursor-pointer hover:text-secondary-foreground'
         />
       </CardContent>
     </Card>
