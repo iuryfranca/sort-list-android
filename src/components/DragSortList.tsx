@@ -21,11 +21,13 @@ import { type Task, TaskCard } from './TaskCard'
 import type { Column } from './BoardColumn'
 import { hasDraggableData } from '@/lib/utils'
 import { coordinateGetter } from './multipleContainersKeyboardPreset'
+import { useList } from '@/core/list-provider'
+import { load } from '@tauri-apps/plugin-store'
 
 const defaultCols = [
   {
-    id: 'todo' as const,
-    title: 'Todo',
+    id: 'sortList' as const,
+    title: 'Lista Simples',
   },
   // {
   //   id: 'in-progress' as const,
@@ -39,89 +41,18 @@ const defaultCols = [
 
 export type ColumnId = (typeof defaultCols)[number]['id']
 
-const initialTasks: Task[] = [
-  {
-    id: 1,
-    columnId: 'todo',
-    content: 'Implement user authentication',
-  },
-  {
-    id: 2,
-    columnId: 'todo',
-    content: 'Build contact us page',
-  },
-  {
-    id: 3,
-    columnId: 'todo',
-    content: 'Create product catalog',
-  },
-  {
-    id: 4,
-    columnId: 'todo',
-    content: 'Develop about us page',
-  },
-  // {
-  //   id: 'task10',
-  //   columnId: 'todo',
-  //   content: 'Optimize website for mobile devices',
-  // },
-  // {
-  //   id: 'task11',
-  //   columnId: 'todo',
-  //   content: 'Integrate payment gateway',
-  // },
-  // {
-  //   id: 'task12',
-  //   columnId: 'todo',
-  //   content: 'Perform testing and bug fixing',
-  // },
-  // {
-  //   id: 'task13',
-  //   columnId: 'todo',
-  //   content: 'Launch website and deploy to server',
-  // },
-  // {
-  //   id: 'task14',
-  //   columnId: 'todo',
-  //   content: 'Launch website and deploy to server',
-  // },
-  // {
-  //   id: 'task15',
-  //   columnId: 'todo',
-  //   content: 'Launch website and deploy to server',
-  // },
-  // {
-  //   id: 'task16',
-  //   columnId: 'todo',
-  //   content: 'Launch website and deploy to server',
-  // },
-  // {
-  //   id: 'task17',
-  //   columnId: 'todo',
-  //   content: 'Launch website and deploy to server',
-  // },
-  // {
-  //   id: 'task18',
-  //   columnId: 'todo',
-  //   content: 'Launch website and deploy to server',
-  // },
-  // {
-  //   id: 'task19',
-  //   columnId: 'todo',
-  //   content: 'Launch website and deploy to server',
-  // },
-  // {
-  //   id: 'task20',
-  //   columnId: 'todo',
-  //   content: 'Launch website and deploy to server',
-  // },
-]
-export function DragSortList() {
-  const [columns, setColumns] = useState<Column[]>(defaultCols)
-  const pickedUpTaskColumn = useRef<ColumnId | null>(null)
-  const columnsId = useMemo(() => columns.map((col) => col.id), [columns])
+const storeListTasks = await load('../store/storeListTasks.json', {
+  autoSave: true,
+})
 
-  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+export function DragSortList() {
+  const { listTasks, setListTasks } = useList()
+
+  const [columns, setColumns] = useState<Column[]>(defaultCols)
+
+  const pickedUpTaskColumn = useRef<ColumnId | null>(null)
+
+  const columnsId = useMemo(() => columns.map((col) => col.id), [columns])
 
   const [activeColumn, setActiveColumn] = useState<Column | null>(null)
 
@@ -136,7 +67,7 @@ export function DragSortList() {
   )
 
   function getDraggingTaskData(taskId: UniqueIdentifier, columnId: ColumnId) {
-    const tasksInColumn = tasks.filter((task) => task.columnId === columnId)
+    const tasksInColumn = listTasks.filter((task) => task.columnId === columnId)
     const taskPosition = tasksInColumn.findIndex((task) => task.id === taskId)
     const column = columns.find((col) => col.id === columnId)
     return {
@@ -162,7 +93,7 @@ export function DragSortList() {
           pickedUpTaskColumn.current
         )
         return `Picked up Task ${
-          active.data.current.task.content
+          active.data.current.task.description
         } at position: ${taskPosition + 1} of ${
           tasksInColumn.length
         } in column ${column?.title}`
@@ -189,7 +120,7 @@ export function DragSortList() {
         )
         if (over.data.current.task.columnId !== pickedUpTaskColumn.current) {
           return `Task ${
-            active.data.current.task.content
+            active.data.current.task.description
           } was moved over column ${column?.title} in position ${
             taskPosition + 1
           } of ${tasksInColumn.length}`
@@ -256,7 +187,7 @@ export function DragSortList() {
             <BoardColumn
               key={col.id}
               column={col}
-              tasks={tasks.filter((task) => task.columnId === col.id)}
+              tasks={listTasks.filter((task) => task.columnId === col.id)}
             />
           ))}
         </SortableContext>
@@ -269,14 +200,12 @@ export function DragSortList() {
               <BoardColumn
                 isOverlay
                 column={activeColumn}
-                tasks={tasks.filter(
+                tasks={listTasks.filter(
                   (task) => task.columnId === activeColumn.id
                 )}
               />
             )}
-            {activeTask && (
-              <TaskCard task={activeTask} isOverlay onSave={console.log} />
-            )}
+            {activeTask && <TaskCard task={activeTask} isOverlay />}
           </DragOverlay>,
           document.body
         )}
@@ -346,21 +275,30 @@ export function DragSortList() {
 
     // Im dropping a Task over another Task
     if (isActiveATask && isOverATask) {
-      setTasks((tasks) => {
-        const activeIndex = tasks.findIndex((t) => t.id === activeId)
-        const overIndex = tasks.findIndex((t) => t.id === overId)
-        const activeTask = tasks[activeIndex]
-        const overTask = tasks[overIndex]
-        if (
-          activeTask &&
-          overTask &&
-          activeTask.columnId !== overTask.columnId
-        ) {
-          activeTask.columnId = overTask.columnId
-          return arrayMove(tasks, activeIndex, overIndex - 1)
-        }
+      setListTasks((listTasks) => {
+        const activeIndex = listTasks.findIndex((t) => t.id === activeId)
+        const overIndex = listTasks.findIndex((t) => t.id === overId)
+        // const activeTask = listTasks[activeIndex]
+        // const overTask = listTasks[overIndex]
+        // if (
+        //   activeTask &&
+        //   overTask &&
+        //   activeTask.columnId !== overTask.columnId
+        // ) {
+        //   activeTask.columnId = overTask.columnId
+        //   return arrayMove(listTasks, activeIndex, overIndex - 1)
+        // }
 
-        return arrayMove(tasks, activeIndex, overIndex)
+        const arrayMoved = arrayMove(listTasks, activeIndex, overIndex)
+
+        // Atualizar positionList com os indices de cada id e salvar no store
+        arrayMoved.forEach((task, index) => {
+          task.positionList = index
+
+          storeListTasks.set(String(task.id), task)
+        })
+
+        return arrayMoved
       })
     }
 
@@ -368,14 +306,14 @@ export function DragSortList() {
 
     // Im dropping a Task over a column
     if (isActiveATask && isOverAColumn) {
-      setTasks((tasks) => {
-        const activeIndex = tasks.findIndex((t) => t.id === activeId)
-        const activeTask = tasks[activeIndex]
+      setListTasks((listTasks) => {
+        const activeIndex = listTasks.findIndex((t) => t.id === activeId)
+        const activeTask = listTasks[activeIndex]
         if (activeTask) {
           activeTask.columnId = overId as ColumnId
-          return arrayMove(tasks, activeIndex, activeIndex)
+          return arrayMove(listTasks, activeIndex, activeIndex)
         }
-        return tasks
+        return listTasks
       })
     }
   }

@@ -10,22 +10,21 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { useEffect, useState } from 'react'
+import { useList } from '@/core/list-provider'
 
 export interface Task {
   id: UniqueIdentifier
   columnId: ColumnId
-  content: string
+  checked: boolean
+  value: number | null
+  description: string
+  positionList: number
 }
 
 interface TaskCardProps {
   task: Task
   isOverlay?: boolean
-  onSave: (item: {
-    id: number
-    checked: boolean
-    value: number
-    description: string
-  }) => void
+  onSave?: (item: Task) => void
 }
 
 export type TaskType = 'Task'
@@ -36,8 +35,6 @@ export interface TaskDragData {
 }
 
 export function TaskCard({ task, isOverlay, onSave }: TaskCardProps) {
-  const id = task.id as number
-
   const {
     setNodeRef,
     attributes,
@@ -70,21 +67,36 @@ export function TaskCard({ task, isOverlay, onSave }: TaskCardProps) {
     },
   })
 
-  const [value, setValue] = useState(0)
-  const [description, setDescription] = useState('')
-  const [checked, setIsChecked] = useState(false)
+  const { removeItem } = useList()
+
+  const [checked, setIsChecked] = useState(task.checked)
+  const [value, setValue] = useState<number | null>(task.value)
+  const [description, setDescription] = useState(task.description)
 
   const handleClear = () => {
-    setValue(0)
+    if (!task.checked && !task.value && !task.description) {
+      removeItem(task.id)
+      return
+    }
+
+    setValue(null)
     setDescription('')
     setIsChecked(false)
   }
 
   // Usar debounce para atrasar o envio
   useEffect(() => {
+    if (!onSave) return
+
     const handler = setTimeout(() => {
-      console.log('enviando', id, checked, value, description)
-      onSave({ id, checked, value, description })
+      onSave({
+        id: task.id,
+        columnId: 'sortList',
+        checked,
+        value,
+        description,
+        positionList: task.positionList,
+      })
     }, 500)
 
     // Limpa o timeout se o usuário continuar digitando
@@ -116,11 +128,13 @@ export function TaskCard({ task, isOverlay, onSave }: TaskCardProps) {
           type='number'
           className='w-24'
           placeholder='R$ 10,00'
+          value={value ? value.toString() : ''}
           onChange={(e) => setValue(parseInt(e.target.value))}
         />
         <Textarea
           className='min-h-[auto] h-11 resize-none text-sm border-none leading-8 p-1'
           placeholder='Escreva aqui...'
+          value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
         <X

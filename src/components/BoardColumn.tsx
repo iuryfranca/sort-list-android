@@ -1,12 +1,14 @@
 import { SortableContext, useSortable } from '@dnd-kit/sortable'
 import { type UniqueIdentifier } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { use, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Task, TaskCard } from './TaskCard'
 import { cva } from 'class-variance-authority'
 import { Card, CardContent } from './ui/card'
 import { ScrollArea } from './ui/scroll-area'
-import { ListItem, useList } from '@/core/list-provider'
+import { useList } from '@/core/list-provider'
+import { v4 as uuidv4 } from 'uuid'
+import { Button } from '@/components/ui/button'
 
 export interface Column {
   id: UniqueIdentifier
@@ -61,26 +63,37 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
     }
   )
 
-  const { list, addItem, updateItem, removeItem } = useList()
+  const { listTasks, updateItem, addItem } = useList()
 
-  const [item, setItem] = useState<ListItem>({
-    id: Math.random(),
-    checked: false,
-    value: 0,
-    description: '',
-  })
+  const [itemOnSave, setItemOnSave] = useState<Task | null>(null)
 
   const handleEdit = () => {
-    updateItem(item.id, {
-      checked: item.checked,
-      value: item.value,
-      description: item.description,
+    if (!itemOnSave) return
+
+    updateItem(itemOnSave.id, {
+      id: itemOnSave.id,
+      columnId: itemOnSave.columnId,
+      checked: itemOnSave.checked,
+      value: itemOnSave.value,
+      description: itemOnSave.description,
+      positionList: itemOnSave.positionList,
+    })
+  }
+
+  const handleAddNewItem = () => {
+    addItem({
+      id: uuidv4(),
+      columnId: 'sortList',
+      checked: false,
+      value: null,
+      description: '',
+      positionList: listTasks.length,
     })
   }
 
   useEffect(() => {
     handleEdit()
-  }, [item])
+  }, [itemOnSave])
 
   return (
     <Card
@@ -92,9 +105,12 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
       <ScrollArea className='p-1'>
         <CardContent className='flex flex-grow flex-col gap-2 p-1'>
           <SortableContext items={tasksIds}>
-            {tasks.map((task, index) => (
-              <TaskCard key={index} task={task} onSave={setItem} />
+            {tasks.map((task) => (
+              <TaskCard key={task.id} task={task} onSave={setItemOnSave} />
             ))}
+            <Button className='mt-2' onClick={handleAddNewItem}>
+              Novo +
+            </Button>
           </SortableContext>
         </CardContent>
       </ScrollArea>

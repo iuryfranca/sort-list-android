@@ -7,14 +7,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Combine, EllipsisVertical, Github, Linkedin } from 'lucide-react'
+import {
+  Combine,
+  EllipsisVertical,
+  Github,
+  Linkedin,
+  Trash,
+} from 'lucide-react'
 
 import { open } from '@tauri-apps/plugin-shell'
+import { useList } from '@/core/list-provider'
 
 export function OptionsNav() {
   const openExternelLink = (url: string) => {
     open(url)
   }
+
+  const { clearList } = useList()
 
   return (
     <DropdownMenu>
@@ -27,6 +36,12 @@ export function OptionsNav() {
         <DropdownMenuItem className='flex justify-between items-center'>
           Coleções
           <Combine className='h-4 w-4 text-primary' />
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => clearList()}
+          className='flex justify-between items-center'>
+          Limpar lista
+          <Trash className='h-4 w-4 text-primary' />
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
